@@ -56,7 +56,7 @@ def create_json_data_from_csv():
 		row_dict["country"] = 'AU' # Overwritting country because the client's input file doesn't have any country column (and this is a required field).
 
 		#row_dict["device"] = row[device_header]
-		row_dict["device"] = 'mobile' # Overwritting device as a "dirty" shortcut because GroupM's input file only had smartphone/tablet. This needs to be improved.
+		row_dict["device"] = 'mobile' # Overwritting device as a "dirty" shortcut because the client's example input file only had smartphone/tablet. This needs to be improved.
 		row_dict["impressions"] = row[impressions_header]
 		row_dict["date"] = row[date_header]
 		# row_dict["date"] = '2022-09-01'
