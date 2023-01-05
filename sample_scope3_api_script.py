@@ -30,8 +30,8 @@ csv_file_name = "sample_input.csv"
 csv_separator = "," #only change this if your CSV file is using a different separator. 
 
 # Your Scope3 credentials
-AccessClientId = "cZNVVFatP35KC4J0UTaECLMXDLeU4ipN"
-AccessClientSecret = "OcWdenrYP2HVZKmXwQqaEqykkAcUpYAm3umIdsq9tbU7CW4xPmClginJZpp1EAZt"
+AccessClientId = "YOUR_CLIENT_ID"
+AccessClientSecret = "YOUR_SECRET"
 
 # Info about the column names of the csv file.
 # These inputs will help this script how to comprehend the columns in your input CSV file.
