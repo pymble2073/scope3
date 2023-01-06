@@ -1,0 +1,71 @@
+# This simple Python script 
+# 1- Makes one API call to Scope3's Campaign emissions calculation service.
+# 2- Prints the API response on terminal.
+
+# First let's import the requests module
+import requests
+
+# We first need to specify our Scope3 API credentials
+AccessClientId = "FILL_IN_HERE_YOUR_CLIENT_ID"
+AccessClientSecret = "FILL_IN_HERE_YOUR_CLIENT_SECRET"
+
+# Let's now specify the Scope3 campaign emissions calculation service endpoint URL and fill in the headers required for our API call.
+scope3_api_endpoint_url = "https://api.scope3.com/v1/calculate/daily?includeRows=true"
+headers = {
+	"Accept": "application/json",
+	"Content-Type": "application/json",
+	"AccessClientId": AccessClientId,
+	"AccessClientSecret": AccessClientSecret
+}
+
+# Let's specify our campaign data.
+# In this example we'll assume that we served 1000 banner ad impressions on the NY Times Android mobile app to users in California on Jan 1st 2023.
+# and 5000 video ad impressions (of 15 seconds) on cnn.com' website on desktops to users in Florida the following day.
+input_data = {
+     "rows": [
+          {
+               "identifier": "1",
+               "app": {
+                    "storeId": "com.nytimes.android"
+               },
+               "creative": {
+                    "format": "banner",
+                    "payloadSize": 180000,
+               },
+               "impressions": 1000,
+               "date": "2023-01-01",
+               "country": "US",
+               "region": "CA",
+               "deviceType": "phone",
+               "channel": "display-app"
+          },
+          {
+               "identifier": "2",
+               "site": {
+                    "domain": "cnn.com"
+               },
+               "creative": {
+                    "format": "video",
+                    "durationSeconds": 15
+               },
+               "impressions": 5000,
+               "date": "2023-01-02",
+               "country": "US",
+               "region": "FL",
+               "deviceType": "pc",
+               "channel": "display-web"
+          }
+     ]
+}
+
+# Everything is ready, we can now make our first API call to the Scope3 API!
+scope3_api_call = requests.post(scope3_api_endpoint_url, json=input_data, headers=headers)
+
+# Let's store the JSON response:
+scope3_api_response = scope3_api_call.json()
+
+# Let's display that response on screen:
+print(scope3_api_response)
+
+# Congratulations, you've just made your first API call to the Scope3 API using Python!
+# We can't wait to see what you build next!
