@@ -1,5 +1,5 @@
 ########################################################################################
-# LAST UPDATED: JAN 5th 2023
+# LAST UPDATED: APRIL 3rd 2023
 ########################################################################################
 
 ############################## PURPOSE OF THIS SCRIPT ##################################
@@ -18,6 +18,7 @@ import pandas as pd
 import json
 import datetime
 import urllib.parse
+
 # Note: make sure the above Python modules are installed in the machine/server before running this script.
 pd.set_option('display.max_columns', None)
 
@@ -56,6 +57,7 @@ use_channel_column = True #REQUIRED
 channel_header = 'Environment' #REQUIRED if use_channel_column is set to True
 web_aliases = ['Web', 'web', 'Web optimized for device', 'Web optimized for device'] #REQUIRED if use_channel_column is set to True. Leave as is if all your inputs are app only.
 app_aliases = ['App', 'app', 'mobile_app'] #REQUIRED if use_channel_column is set to True. Leave as is if all your inputs are web only.
+streaming_aliases = ['STREAMING-VIDEO', 'streaming-video', 'STREAMING', 'streaming', 'CTV', 'ctv,' 'OTT', 'ott', 'BVOD', 'CUTV']
 
 device_type_header = 'Device Type' #REQUIRED
 phone_aliases = ['Smart Phone', 'smart phone', 'mobile', 'Mobile', 'phone', 'Phone']
@@ -76,6 +78,12 @@ creative_width_header = 'Creative Width' #Leave as is if that column doesn't exi
 creative_height_header =  'Creative Height' #Leave as is if that column doesn't exist in your CSV.
 creative_duration_header = 'Max Video Duration (seconds)' #Leave as is if that column doesn't exist in your CSV.
 
+use_seller_column = True #REQUIRED
+seller_header = 'Seller'
+use_buyingMethod_column = True #REQUIRED
+buyingMethod_header = 'Buying Method'
+supported_buyingMethods = ["programmatic-open", "programmatic-pmp", "programmatic-guaranteed", "direct", "direct-takeover"]
+
 # Constants: do not modify unless required.
 max_json_rows = 100000
 scope3_api_version = '1' # Leave as is to use v1.1
@@ -84,6 +92,9 @@ url = "https://api.scope3.com/v" + scope3_api_version + "/calculate/daily?includ
 
 ############################## END OF CONFIG SECTION #########################################
 ############################## READ FILE #########################################
+def isNaN(string):
+    return string != string
+
 def normalizeDomain(url_field):
 	# This function returns the domain component of a URL (url_field)
 	# for example if https://www.nytimes.com/section/world is the input, nytimes.com is the output.
@@ -130,10 +141,11 @@ def prepare_input_file(csv_file):
 		report_df['scope3_formatted_date'] = (datetime.date.today() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 	report_df['scope3_formatted_device_type'] = ['phone' if x in phone_aliases else 'tablet' if x in tablet_aliases else 'pc' if x in pc_aliases else 'tv' if x in tv_aliases else 'pc' for x in report_df[device_type_header]]
 	report_df['scope3_formatted_creative_format'] = ['banner' if x in banner_aliases else 'video' if x in video_aliases else 'text' if x in text_aliases else 'unknown' for x in report_df[creative_format_header]]
+	
 	if use_channel_column:
-		report_df['scope3_formatted_channel'] = ['display-web' if x in web_aliases else 'display-app' if x in app_aliases else 'unknown' for x in report_df[channel_header]]
+		report_df['scope3_formatted_channel'] = ['display-web' if x in web_aliases else  'display-app' if x in app_aliases else 'streaming-video' if x in streaming_aliases else '' for x in report_df[channel_header]]
 	else:
-		report_df['scope3_formatted_channel'] = 'display-web'
+		report_df['scope3_formatted_channel'] = ''
 
 	report_df['scope3_formatted_width'] = 0
 	report_df['scope3_formatted_height'] = 0
@@ -157,19 +169,22 @@ def evaluate_emissions(report_df):
 	for index, row in report_df.iterrows():
 		row_dict = {}
 		row_dict["identifier"] = str(row["scope3_row_identifier"])
-		row_dict["channel"] = str(row["scope3_formatted_channel"])
-		if row["scope3_formatted_channel"] == 'display-web':
-			row_dict["site"] = {}
-			row_dict["site"]["domain"] = normalizeDomain(str(row[site_domain_or_app_header]))
-		elif row["scope3_formatted_channel"] == 'display-app':
-			row_dict["app"] = {}
-			row_dict["app"]["storeId"] = normalizeApp(str(row[separate_app_header])) if use_separate_column_for_apps else normalizeApp(str(row[site_domain_or_app_header]))
-		
+
+		if row["scope3_formatted_channel"] != '':
+			row_dict["channel"] = str(row["scope3_formatted_channel"])
+		if row["scope3_formatted_channel"] in ['display-web']:
+			row_dict["inventoryId"] = normalizeDomain(str(row[site_domain_or_app_header]))
+		elif row["scope3_formatted_channel"] in ['display-app', '', 'streaming-video']:
+			row_dict["inventoryId"] = normalizeApp(str(row[separate_app_header])) if use_separate_column_for_apps else normalizeApp(str(row[site_domain_or_app_header]))
+
 		row_dict["country"] = row[country_header]
 		if use_region_column:
 			row_dict['region'] = str(row[region_header])
 		row_dict["deviceType"] = row["scope3_formatted_device_type"]
-		row_dict["impressions"] = int(row[impressions_header])
+		try:
+			row_dict["impressions"] = int(row[impressions_header])
+		except ValueError:
+			row_dict["impressions"] = 0
 		row_dict["date"] = str(row["scope3_formatted_date"])
 		row_dict["creative"] = {}
 		row_dict["creative"]["format"] = row['scope3_formatted_creative_format']
@@ -182,6 +197,12 @@ def evaluate_emissions(report_df):
 				row_dict["creative"]['payloadSize'] = int(row[payloadSize_header])
 			else:
 				row_dict["creative"]['payloadSize'] = int(int(row['scope3_formatted_width']) * int(row['scope3_formatted_height']) * 1.2)
+
+		if use_seller_column and not isNaN(row[seller_header]):
+			row_dict["seller"] = str(row[seller_header])
+
+		if use_buyingMethod_column and row[buyingMethod_header] in supported_buyingMethods :
+			row_dict["buyingMethod"] = row[buyingMethod_header]
 
 		rows_to_compute.append(row_dict)
 
@@ -203,10 +224,19 @@ def evaluate_emissions(report_df):
 		print("Going through loop number " + str(i+1) + "...")
 		report_json = {}
 		report_json["rows"] = rows_to_compute[i*max_json_rows:(i+1)*max_json_rows-1]
-		#print(report_json) #If the script errors we recommend uncommenting this print and checking that the API input is valid.
-		req = requests.post(url, json=report_json, headers=headers)
-		response = req.json()
-		response_rows_json_string = json.dumps(response['rows'])
+		print(report_json) #If the script errors we recommend uncommenting this print and checking that the API input is valid.
+		try:
+			req = requests.post(url, json=report_json, headers=headers)
+			response = req.json()
+			response_rows_json_string = json.dumps(response['rows'])
+		except (KeyError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError) as error:
+			print("An error occured... First printing it...")
+			print(error)
+			print("Now waiting 2s and doing one re-try")
+			time.sleep(2)
+			req = requests.post(url, json=report_json, headers=headers)
+			response = req.json()
+			response_rows_json_string = json.dumps(response['rows'])
 		impressionsModeled += response['impressionsModeled']
 		impressionsSkipped += response['impressionsSkipped']
 		result_df = pd.read_json(response_rows_json_string)
