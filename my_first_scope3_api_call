@@ -19,15 +19,13 @@ headers = {
 }
 
 # Let's specify our campaign data.
-# In this example we'll assume that we served 1000 banner ad impressions on the NY Times Android mobile app to users in California on Jan 1st 2023.
-# and 5000 video ad impressions (of 15 seconds) on cnn.com' website on desktops to users in Florida the following day.
+# In this example we'll assume that we served 1000 banner ad impressions on the NY Times Android mobile app to users in the US on Jan 1st 2023.
+# and 5000 video ad impressions (of 15 seconds) on cnn.com' website on desktops to users in Florida the following day, through Xandr (SSP) and via programmatic guaranteed pipes.
 input_data = {
      "rows": [
           {
                "identifier": "1",
-               "app": {
-                    "storeId": "com.nytimes.android"
-               },
+               "inventoryId": "com.nytimes.android",
                "creative": {
                     "format": "banner",
                     "payloadSize": 180000,
@@ -35,15 +33,12 @@ input_data = {
                "impressions": 1000,
                "date": "2023-01-01",
                "country": "US",
-               "region": "CA",
                "deviceType": "phone",
                "channel": "display-app"
           },
           {
                "identifier": "2",
-               "site": {
-                    "domain": "cnn.com"
-               },
+               "inventoryId": "cnn.com",
                "creative": {
                     "format": "video",
                     "durationSeconds": 15
@@ -53,7 +48,9 @@ input_data = {
                "country": "US",
                "region": "FL",
                "deviceType": "pc",
-               "channel": "display-web"
+               "channel": "streaming-video",
+               "seller":"Xandr",
+               "buyingMethod":"programmatic-guaranteed"
           }
      ]
 }
