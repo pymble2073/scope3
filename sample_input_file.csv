@@ -1,5 +1,7 @@
-﻿Date,Country,App/URL,Device Type,Environment,Creative Type,Creative Size,Max Video Duration (seconds),Impressions
-1/1/2023,AU,smh.com.au,Desktop,Web optimized for device,Standard,160x600,--,121
-1/1/2023,AU,nine.com.au,mobile,Web optimized for device,Standard,300x250,--,35
-1/1/2023,AU,com.nytimes.android,tablet,app,Standard,160x600,--,122
-1/1/2023,AU,https://apps.apple.com/au/app/the-guardian-live-world-news/id409128287,tablet,app,Standard,300x50,--,10
+Date,Country,App/URL,Device Type,Environment,Creative Type,Creative Size,Max Video Duration (seconds),Seller,Buying Method,Impressions
+1/4/2023,AU,smh.com.au,Desktop,Web optimized for device,Standard,160x600,,Xandr,programmatic-open,121
+1/4/2023,AU,nine.com.au,mobile,Web optimized for device,Standard,300x250,,Magnite,direct,35
+1/4/2023,AU,com.nytimes.android,tablet,app,Standard,160x600,,,,122
+1/4/2023,AU,https://apps.apple.com/au/app/the-guardian-live-world-news/id409128287,tablet,app,Standard,300x50,,,,10
+1/4/2023,AU,netflix.com,tv,,Video,,30,Netflix,,100
+1/4/2023,AU,9now.com.au,tv,streaming,Video,,15,,direct,155
