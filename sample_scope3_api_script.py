@@ -1,5 +1,5 @@
 ########################################################################################
-# LAST UPDATED: APRIL 3rd 2023
+# LAST UPDATED: APRIL 20th 2023
 ########################################################################################
 
 ############################## PURPOSE OF THIS SCRIPT ##################################
@@ -106,15 +106,29 @@ def normalizeDomain(url_field):
 	return domain
 
 def normalizeApp(app_field):
-	# This function returns the storeId contained in the app_field, allowing this script to support full store URLs too.
-	# for example if https://apps.apple.com/au/app/9now/id542088539 is the input, 542088539 is the output.
-	# And com.easybrain.sudoku.android remains com.easybrain.sudoku.android
-	if "apps.apple.com" in app_field:
-		storeId = app_field.split(sep="/id")[1]
-	elif "play.google.com/store/apps/" in app_field:
-		parsedURL = urllib.parse.urlparse(app_field)
-		storeId = urllib.parse.parse_qs(parsedURL.query)['id'][0]
-	else:
+	try:
+		if "apps.apple.com" in app_field:
+			storeId = app_field.split(sep="/id")[1]
+		elif "play.google.com/store/apps/" in app_field:
+			parsedURL = urllib.parse.urlparse(app_field)
+			storeId = urllib.parse.parse_qs(parsedURL.query)['id'][0]
+		elif "samsung.com/us/appstore/" in app_field:
+			storeId = app_field.split(sep="/app/")[1]
+		elif "amazon.com/" in app_field:
+			if "/dp/" in app_field:
+				storeId = app_field.split(sep="/dp/")[1]
+			elif "/gp/product/" in app_field:
+				storeId = app_field.split(sep="/gp/product/")[1]
+			else:
+				storeId = app_field
+		elif "lgappstv.com/" in app_field:
+			parsedURL = urllib.parse.urlparse(app_field)
+			storeId = urllib.parse.parse_qs(parsedURL.query)['appId'][0]
+		elif "roku.com/" in app_field:
+			storeId = app_field.split(sep="/details/")[1]
+		else:
+			storeId = app_field
+	except IndexError as e:
 		storeId = app_field
 	return storeId
 
